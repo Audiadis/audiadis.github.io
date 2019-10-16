@@ -1,1 +1,82 @@
-Hello World
+<script type="text/javascript">
+
+var latitude;
+var longitude;
+
+function callBack(pos) {
+	try {
+		latitude = pos.coords.latitude;
+		longitude = pos.coords.longitude;
+		document.getElementById('latitude').textContent = latitude;
+		document.getElementById('longitude').textContent = longitude;
+		console.log(latitude);
+		console.log(longitude);
+		if (latitude.toString().length == 0 && longitude.toString().length == 0) {
+			console.log('leave_app()');
+			console.log(latitude);
+			console.log(latitude.length);
+			//leave_app();
+		} else {
+			console.log('latitude is valid');
+			console.log(latitude);
+		}
+	} catch (e) {
+		alert('Vous allez quitter l\'app');
+		console.log(e);
+		//leave_app();
+	}
+}
+
+function error(err) {
+	console.warn(`ERROR(${err.code}): ${err.message}`);
+	alert("L'accès au GPS est nécessaire pour pouvoir utiliser cette app");
+	leave_app();
+}
+
+function getLocation() {
+	var options = {
+	  enableHighAccuracy: true,
+	  timeout: 5000,
+	  maximumAge: 0
+	};
+
+	if (navigator.geolocation) {
+			navigator.geolocation.getCurrentPosition(callBack, error, options);
+	} else {
+		console.log("Geolocation is not supported by this browser.");
+		alert("L'accès au GPS est nécessaire pour pouvoir utiliser cette app");
+		leave_app();
+	}
+}
+
+  if ('serviceWorker' in navigator) {
+    window.addEventListener('load', function() {
+      navigator.serviceWorker.register('service-worker.js').then(function(registration) {
+        // Registration was successful
+        console.log('ServiceWorker registration successful with scope: ', registration.scope);
+      }, function(err) {
+        // registration failed :(
+        console.log('ServiceWorker registration failed: ', err);
+      });
+    });
+  }
+
+
+function leave_app() {
+	window.location = "https://www.centrakor.com";
+}
+
+if (confirm('Cette app a besoin d\'accès au GPS pour fonctionner')) {
+	getLocation();
+} else {
+	leave_app();
+}
+
+async function fetch_store_data() {
+
+}
+
+</script>
+
+Latitude: <span id="latitude"></span><br>
+Longitude: <span id="longitude"></span><br>
