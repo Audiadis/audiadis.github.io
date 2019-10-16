@@ -1,36 +1,32 @@
 <script type="text/javascript">
 
-var latitude;
-var longitude;
+var store_lat;
+var store_lng;
+var user_lat;
+var user_lng;
+var hot_tubes;
 
 function callBack(pos) {
 	try {
-		latitude = pos.coords.latitude;
-		longitude = pos.coords.longitude;
-		document.getElementById('latitude').textContent = latitude;
-		document.getElementById('longitude').textContent = longitude;
-		console.log(latitude);
-		console.log(longitude);
-		if (latitude.toString().length == 0 && longitude.toString().length == 0) {
+		user_lat = pos.coords.latitude;
+		user_lng = pos.coords.longitude;
+		document.getElementById('user_lat').textContent = user_lat;
+		document.getElementById('user_lng').textContent = user_lng;
+
+		document.getElementById('diff_lat').textContent = store_lat - user_lat;
+		document.getElementById('diff_lng').textContent = store_lng - user_lng;
+		if (user_lat.toString().length == 0 && user_lng.toString().length == 0) {
 			console.log('leave_app()');
-			console.log(latitude);
-			console.log(latitude.length);
 			//leave_app();
-		} else {
-			console.log('latitude is valid');
-			console.log(latitude);
 		}
 	} catch (e) {
-		alert('Vous allez quitter l\'app');
-		console.log(e);
-		//leave_app();
+		leave_app('Vous allez quitter l\'app');
 	}
 }
 
 function error(err) {
-	console.warn(`ERROR(${err.code}): ${err.message}`);
-	alert("L'accès au GPS est nécessaire pour pouvoir utiliser cette app");
-	leave_app();
+	console.log(`ERROR(${err.code}): ${err.message}`);
+	leave_app("L'accès au GPS est nécessaire pour pouvoir utiliser cette app");
 }
 
 function getLocation() {
@@ -44,39 +40,76 @@ function getLocation() {
 			navigator.geolocation.getCurrentPosition(callBack, error, options);
 	} else {
 		console.log("Geolocation is not supported by this browser.");
-		alert("L'accès au GPS est nécessaire pour pouvoir utiliser cette app");
-		leave_app();
+		leave_app("L'accès au GPS est nécessaire pour pouvoir utiliser cette app");
 	}
-}
-
-  if ('serviceWorker' in navigator) {
-    window.addEventListener('load', function() {
-      navigator.serviceWorker.register('service-worker.js').then(function(registration) {
-        // Registration was successful
-        console.log('ServiceWorker registration successful with scope: ', registration.scope);
-      }, function(err) {
-        // registration failed :(
-        console.log('ServiceWorker registration failed: ', err);
-      });
-    });
-  }
-
-
-function leave_app() {
-	window.location = "https://www.centrakor.com";
 }
 
 if (confirm('Cette app a besoin d\'accès au GPS pour fonctionner')) {
 	getLocation();
 } else {
-	leave_app();
+	leave_app('Pour reessayer veuillez authorizer la géolocalisation');
 }
+
+fetch_store_data();
+fetch_hot_tubes();
 
 async function fetch_store_data() {
+	var cur_url = new URL(window.location);
+	var code = cur_url.searchParams.get("code");
+	var url = window.location.protocol + '//' + window.location.hostname + '/api/jukebox/store?code=' + code;
+	var response = await fetch(url);
+	var data = await response.json();
+	if (data.length != 1) {
+		leave_app('Erreur code magasin');
+	}
+	store_lat = parseFloat(data[0].lat);
+	store_lng = parseFloat(data[0].lng);
+	document.getElementById('store_lat').textContent = store_lat;
+	document.getElementById('store_lng').textContent = store_lng;
+
+	document.getElementById('diff_lat').textContent = store_lat - user_lat;
+	document.getElementById('diff_lng').textContent = store_lng - user_lng;
+}
+
+async function fetch_hot_tubes() {
+	var url = window.location.protocol + '//' + window.location.hostname + '/api/jukebox/hot_tube';
+	var response = await fetch(url);
+	var data = await response.json();
+	if (data.length > 0) {
+		hot_tubes = data;
+	}
+	render_hot_tubes(hot_tubes);
+}
+
+function render_hot_tubes(hot_tubes) {
 
 }
 
-</script>
+function leave_app(message) {
+	if (message) {
+		alert(message);
+	}
+	window.location = "https://www.centrakor.com";
+}
 
-Latitude: <span id="latitude"></span><br>
-Longitude: <span id="longitude"></span><br>
+if ('serviceWorker' in navigator) {
+  window.addEventListener('load', function() {
+    navigator.serviceWorker.register('service-worker.js').then(function(registration) {
+      // Registration was successful
+      console.log('ServiceWorker registration successful with scope: ', registration.scope);
+    }, function(err) {
+      // registration failed :(
+      console.log('ServiceWorker registration failed: ', err);
+    });
+  });
+}
+</script>
+User latitude: <span id="user_lat"></span><br>
+User longitude: <span id="user_lng"></span><br>
+<br>
+Store latitude: <span id="store_lat"></span><br>
+Store longitude: <span id="store_lng"></span><br>
+<br><br>
+Latitude difference: <span id="diff_lat"></span><br>
+Longitude difference: <span id="diff_lng"></span><br>
+
