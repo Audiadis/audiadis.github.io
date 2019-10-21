@@ -7,8 +7,15 @@ var playlist_user;
 var wrong_location_error = 'Vous ne pouvez pas commander des morceaux que dans le magasin.';
 var no_location_error = 'Veuillez activer le GPS de votre portable et authorizer ce site.';
 
-if (confirm('Cette app a besoin d\'accès au GPS pour fonctionner')) {
-	navigator.geolocation.getCurrentPosition(function(){});
+const local_storage = window.localStorage;
+
+var gps_warning = local_storage.getItem('gps_warning');
+
+if (!gps_warning) {
+	if (confirm('Cette app a besoin d\'accès au GPS pour fonctionner')) {
+		navigator.geolocation.getCurrentPosition(function(){});
+	}
+	localStorage.setItem('gps_warning', true);
 }
 
 fetch_store_data();
